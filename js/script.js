@@ -4,6 +4,7 @@ const nodes = {
   name: fetchNode('#name'),
   email: fetchNode('#mail'),
   title: fetchNode('#title'),
+  othertitle: fetchNode('#other-title'),
   activities: fetchNode('.activities'),
   design: fetchNode('#design'),
   tshirts: fetchNode('[name="all"]'),
@@ -32,10 +33,9 @@ window.onload = () => {
   nodes.name.focus();
   // make name and email fields required
   required(nodes.name);
+  nodes.name.placeholder = "First and last name";
   required(nodes.email);
-  // generate other-title node
-  nodes.title.insertAdjacentHTML('afterend', '<input type="text" id="other-title" placeholder="Your Job Role">');
-  nodes.othertitle = fetchNode('#other-title');
+  nodes.email.placeholder = "Email address"
   // generate total cost node
   nodes.activities.insertAdjacentHTML('beforeend', '<h3 id="total-cost"></h3>');
   nodes.totalcost = fetchNode('#total-cost');
