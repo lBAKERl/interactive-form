@@ -43,6 +43,7 @@ window.onload = () => {
   forEach(hideNode, fetchNodes('div > p'));
   hideNode(nodes.othertitle);
   hideNode(nodes.cc);
+  hideNode(fetchNode('#colors-js-puns'));
 }
 // **EVENT LISTENERS** //
 nodes.title.addEventListener('change', event => {
@@ -52,10 +53,13 @@ nodes.title.addEventListener('change', event => {
 });
 // design selection only permits matching colors
 nodes.design.addEventListener('change', event => {
-  forEach(hideNode, fetchNodes('#color > option'));
-  event.target.value == 'js puns' ?
-    forEach(showNode, fetchNodes('#color > option:nth-child(-n+3)')) :
-    forEach(showNode, fetchNodes('#color > option:nth-child(n+4)'));
+  if(event.target.value == "js puns" || event.target.value == "heart js") {
+    showNode(fetchNode('#colors-js-puns'));
+    forEach(hideNode, fetchNodes('#color > option'));
+    event.target.value == 'js puns' ?
+      forEach(showNode, fetchNodes('#color > option:nth-child(-n+3)')) :
+      forEach(showNode, fetchNodes('#color > option:nth-child(n+4)'));
+  } else hideNode(fetchNode('#colors-js-puns'));
 });
 // disables conflicting activities
 // generates totalcost
