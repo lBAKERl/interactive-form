@@ -23,10 +23,10 @@ const nodes = {
 }
 const regX = {
   email: /.+@.+\..+/,
-  name: /\w \w/,
-  cc: /\d{4}-\d{4}-\d{4}-\d{1,4}/,
-  zip: /\d{5}/,
-  cvv: /\d{3}$/
+  name: /([a-zA-Z]){2,}/,
+  cc: /^[0-9]{4}-?[0-9]{4}-?[0-9]{4}-?[0-9]{1,4}$/,
+  zip: /^\d{5}/,
+  cvv: /^\d{3}$/
 }
 // **INITIALIZE** //
 window.onload = () => {
@@ -46,10 +46,16 @@ window.onload = () => {
   hideNode(fetchNode('#colors-js-puns'));
 }
 // **EVENT LISTENERS** //
+// handles other title user input
 nodes.title.addEventListener('change', event => {
   event.target.value == 'other' ?
-    showNode(nodes.othertitle) :
-    hideNode(nodes.othertitle);
+    (
+    showNode(nodes.othertitle),
+    required(nodes.othertitle)
+    ) : (
+    hideNode(nodes.othertitle),
+    notRequired(nodes.othertitle)
+    ) ;
 });
 // design selection only permits matching colors
 nodes.design.addEventListener('change', event => {
@@ -57,8 +63,13 @@ nodes.design.addEventListener('change', event => {
     showNode(fetchNode('#colors-js-puns'));
     forEach(hideNode, fetchNodes('#color > option'));
     event.target.value == 'js puns' ?
-      forEach(showNode, fetchNodes('#color > option:nth-child(-n+3)')) :
-      forEach(showNode, fetchNodes('#color > option:nth-child(n+4)'));
+      (
+        forEach(showNode, fetchNodes('#color > option:nth-child(-n+3)')),
+        fetchNode('#color').value = "cornflowerblue"
+      ) : (
+        forEach(showNode, fetchNodes('#color > option:nth-child(n+4)')),
+      fetchNode('#color').value = "tomato"
+      ) ;
   } else hideNode(fetchNode('#colors-js-puns'));
 });
 // disables conflicting activities
