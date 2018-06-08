@@ -1,181 +1,189 @@
 'use strict';
-// **GLOBAL BINDINGS ** //
+//** GLOBAL BINDINGS **//
 const nodes = {
-  name: fetchNode('#name'),
-  email: fetchNode('#mail'),
-  title: fetchNode('#title'),
-  othertitle: fetchNode('#other-title'),
-  activities: fetchNode('.activities'),
-  design: fetchNode('#design'),
-  tshirts: fetchNode('[name="all"]'),
-  jsframeworks: fetchNode('[name="js-frameworks"]'),
-  express: fetchNode('[name="express"]'),
-  jslibs: fetchNode('[name="js-libs"]'),
-  node: fetchNode('[name="node"]'),
-  buildtools: fetchNode('[name="build-tools"]'),
-  npm: fetchNode('[name="npm"]'),
-  payment: fetchNode('#payment'),
-  cc: fetchNode('#credit-card'),
-  ccnum: fetchNode('#cc-num'),
-  zip: fetchNode('#zip'),
-  cvv: fetchNode('#cvv'),
-  register: fetchNode('[type="submit"]')
+  name: {
+    node: fetchNode('#name'),
+    check: '^([a-zA-Z]{1,} )([a-zA-Z]{1,} ?){1,}$',
+    msg: 'Full name required',
+  },
+  email: {
+    node: fetchNode('#mail'),
+    check: '^[^ ]+@[^ ]+\.[^ ]+$',
+    msg: 'Enter valid email address',
+  },
+  title: { node: fetchNode('#title'), },
+  othertitle: {
+    node: fetchNode('#other-title'),
+    check: '^([a-zA-Z] ?){1,}$',
+    msg: 'Enter your job title',
+  },
+  ccnum: {
+    node: fetchNode('#cc-num'),
+    required: (fetchNode('#payment').value == 'credit card'),
+    check: '^[0-9]{4}-?[0-9]{4}-?[0-9]{4}-?[0-9]{1,4}$',
+    msg: 'Enter valid card number',
+  },
+  zip: {
+    node: fetchNode('#zip'),
+    check: '^[0-9]{5}$',
+    msg: 'Enter valid 5 digit zipcode',
+  },
+  cvv: {
+    node: fetchNode('#cvv'),
+    check: '^[0-9]{3}$',
+    msg: '3 digit CVV',
+  },
+  design: { node: fetchNode('#design'), },
+  activities: { node: fetchNode('.activities'), },
+  tshirts: { node: fetchNode('[name="all"]'), },
+  shirtcolors: { node: fetchNode('#colors-js-puns'), },
+  color: { node: fetchNode('#color') },
+  jsframeworks: { node: fetchNode('[name="js-frameworks"]'), },
+  express: { node: fetchNode('[name="express"]'), },
+  jslibs: { node: fetchNode('[name="js-libs"]'), },
+  node: { node: fetchNode('[name="node"]'), },
+  buildtools: { node: fetchNode('[name="build-tools"]'), },
+  npm: { node: fetchNode('[name="npm"]'), },
+  totalcost: {},
+  payment: { node: fetchNode('#payment'), },
+  cc: { node: fetchNode('#credit-card'), },
+  register: { node: fetchNode('[type="submit"]'), },
 }
-const regX = {
-  email: /.+@.+\..+/,
-  name: /([a-zA-Z]){2,}/,
-  cc: /^[0-9]{4}-?[0-9]{4}-?[0-9]{4}-?[0-9]{1,4}$/,
-  zip: /^\d{5}/,
-  cvv: /^\d{3}$/
-}
-// **INITIALIZE** //
+//** INITIALIZE **//
 window.onload = () => {
-  nodes.name.focus();
-  // make name and email fields required
-  required(nodes.name);
-  nodes.name.placeholder = "First and last name";
-  required(nodes.email);
-  nodes.email.placeholder = "Email address"
-  // generate total cost node
-  nodes.activities.insertAdjacentHTML('beforeend', '<h3 id="total-cost"></h3>');
-  nodes.totalcost = fetchNode('#total-cost');
-  // hide innactive nodes
+  const {name, email, activities, othertitle, shirtcolors, payment, design} = nodes;
+  name.node.focus();
+  name.node.placeholder = "First and last name";
+  email.node.placeholder = "Email address";
+  // CREATE TOTAL COST NODE
+  activities.node.insertAdjacentHTML('beforeend', '<h3 id="total-cost"></h3>');
+  nodes.totalcost.node = fetchNode('#total-cost');
+  // SET INITIAL FORM STATE
   forEach(hideNode, fetchNodes('div > p'));
-  hideNode(nodes.othertitle);
-  hideNode(nodes.cc);
-  hideNode(fetchNode('#colors-js-puns'));
+  forEach(hideNode, fetchNodes('#color > option'))
+  hideNode(othertitle.node);
+  hideNode(shirtcolors.node);
+  hideNode(fetchNode('#payment > option'));
+  payment.node.value = 'credit card';
+  // MAKE NAME / EMAIL FIELDS REQUIRED
+  required(createAttribute(name.node, 'pattern', name.check));
+  required(createAttribute(email.node, 'pattern', email.check));
 }
-// **EVENT LISTENERS** //
-// handles other title user input
-nodes.title.addEventListener('change', event => {
-  event.target.value == 'other' ?
+//** EVENT LISTENERS **//
+fetchNode('.container').addEventListener('change', event => {
+  const {name, email, title, othertitle, design, shirtcolors, color, payment, cc, ccnum, zip, cvv} = nodes;
+  // VERIFY NAME / EMAIL FIELDS
+  (name.node.value && check(name));
+  (email.node.value && check(email));
+  // SHOW/HIDE OTHER JOB INPUT AND VERIFY OTHER JOB
+  title.node.value == 'other' ?
     (
-    showNode(nodes.othertitle),
-    required(nodes.othertitle)
+      required(createAttribute(showNode(othertitle.node), 'pattern', othertitle.check)),
+      (othertitle.node.value && check(othertitle))
     ) : (
-    hideNode(nodes.othertitle),
-    notRequired(nodes.othertitle)
+      notRequired(deleteAttribute(hideNode(othertitle.node), 'pattern')),
+      othertitle.node.setCustomValidity('')
     ) ;
-});
-// design selection only permits matching colors
-nodes.design.addEventListener('change', event => {
-  if(event.target.value == "js puns" || event.target.value == "heart js") {
-    showNode(fetchNode('#colors-js-puns'));
+  // SHOW SHIRT COLORS FOR CORRESPONDING DESIGN
+  if(design.node.value == "js puns" || design.node.value == "heart js") {
+    showNode(shirtcolors.node);
     forEach(hideNode, fetchNodes('#color > option'));
     event.target.value == 'js puns' ?
       (
         forEach(showNode, fetchNodes('#color > option:nth-child(-n+3)')),
-        fetchNode('#color').value = "cornflowerblue"
+        color.node.value = "cornflowerblue"
       ) : (
         forEach(showNode, fetchNodes('#color > option:nth-child(n+4)')),
-      fetchNode('#color').value = "tomato"
+        color.node.value = "tomato"
       ) ;
-  } else hideNode(fetchNode('#colors-js-puns'));
+  } else hideNode(shirtcolors.node);
+  // SHOW/HIDE PAYMENT INFO / VERIFY INPUT
+  payment.node.value == 'credit card' ?
+    (
+      showNode(cc.node),
+      required(createAttribute(ccnum.node, 'pattern', ccnum.check)),
+      required(createAttribute(zip.node, 'pattern', zip.check)),
+      required(createAttribute(cvv.node, 'pattern', cvv.check)),
+      (ccnum.node.value && check(ccnum)),
+      (zip.node.value && check(zip)),
+      (cvv.node.value && check(cvv))
+    ) : (
+      hideNode(cc.node),
+      notRequired(deleteAttribute(ccnum.node, 'pattern')),
+      notRequired(deleteAttribute(zip.node, 'pattern')),
+      notRequired(deleteAttribute(cvv.node, 'pattern')),
+      ccnum.node.setCustomValidity(''),
+      zip.node.setCustomValidity(''),
+      cvv.node.setCustomValidity('')
+    ) ;
+  payment.node.value == "paypal" ?
+    showNode(fetchNode('div > p:first-child')) :
+    hideNode(fetchNode('div > p:first-child'));
+  payment.node.value == "bitcoin" ?
+    showNode(fetchNode('div:last-child > p:last-child')) :
+    hideNode(fetchNode('div:last-child > p:last-child'));
 });
-// disables conflicting activities
-// generates totalcost
-nodes.activities.addEventListener('change', event => {
+// MANAGE ACTIVITIES / DISABLE CONFLICTING / SHOW TOTAL
+nodes.activities.node.addEventListener('change', event => {
+  const {tshirts, jsframeworks, express, jslibs, node, buildtools, npm, totalcost} = nodes;
   let cost = 0;
-  if(nodes.tshirts.checked) {
-    cost += 200;
-  }
-  if(nodes.jsframeworks.checked) {
-    disable(nodes.express);
-    cost += 100;
-  } else enable(nodes.express);
-  if(nodes.jslibs.checked) {
-    disable(nodes.node);
-    cost += 100;
-  } else enable(nodes.node);
-  if(nodes.express.checked) {
-    disable(nodes.jsframeworks);
-    cost += 100;
-  } else enable(nodes.jsframeworks);
-  if(nodes.node.checked) {
-    disable(nodes.jslibs);
-    cost += 100;
-  } else enable(nodes.jslibs);
-  if(nodes.buildtools.checked) {
-    cost += 100;
-  }
-  if(nodes.npm.checked) {
-    cost += 100;
-  }
-  if(cost > 0) {
-    nodes.totalcost.innerHTML = `$ ${cost}`;
-    nodes.totalcost.style.color = '#184f68'
-  } else {
-    nodes.totalcost.innerHTML = 'Activity selection required';
-    nodes.totalcost.style.color = 'red';
-  }
+  tshirts.node.checked ? cost += 200 : cost += 0;
+  jsframeworks.node.checked ?
+    (disable(express.node), cost += 100) :
+    enable(express.node);
+  jslibs.node.checked ?
+    (disable(node.node), cost += 100) :
+    enable(node.node);
+  express.node.checked ?
+    (disable(jsframeworks.node), cost += 100) :
+    enable(jsframeworks.node);
+  node.node.checked ?
+    (disable(jslibs.node), cost += 100) :
+    enable(jslibs.node);
+  buildtools.node.checked ? cost += 100 : cost += 0;
+  npm.node.checked ? cost += 100 : cost += 0;
+  cost > 0 ? (
+    totalcost.node.innerHTML = `$ ${cost}`,
+    totalcost.node.style.color = '#184f68'
+  ) : (
+    totalcost.node.innerHTML = 'Activity selection required',
+    totalcost.node.style.color = 'red'
+  )  ;
 });
-// shows applicable payment info / fields
-nodes.payment.addEventListener('change', event => {
-  forEach(hideNode, fetchNodes('div > p'));
-  if(event.target.value == 'credit card') {
-    showNode(nodes.cc);
-    required(nodes.ccnum);
-    required(nodes.zip);
-    required(nodes.cvv);
-  } else {
-    hideNode(nodes.cc);
-    notRequired(nodes.ccnum);
-    notRequired(nodes.zip);
-    notRequired(nodes.cvv);
+// VERIFY ACTIVITY SELECTED / TSHIRT DESIGN SELECTED BEFORE SUBMIT
+fetchNode('[type="submit"').addEventListener('click', event => {
+  const {totalcost, activities, design} = nodes;
+  if(!fetchNode('input:checked')){
+    totalcost.node.innerHTML = 'Activity selection required';
+    totalcost.node.style.color = 'red';
+    event.preventDefault();
   }
-  if(event.target.value == 'paypal') {
-    showNode(fetchNode('div > p:first-child'));
-  }
-  if(event.target.value == 'bitcoin') {
-    showNode(fetchNode('div:last-child > p:last-child'));
-  }
-  if(event.target.value == 'select_method') {
-    nodes.payment.style.border = '1px solid red';
-  } else nodes.payment.style.border = 'none';
+  design.node.value == 'Select Theme' ? (
+    event.preventDefault(),
+    design.node.focus(),
+    design.node.setCustomValidity('Choose a shirt design')
+  ) : design.node.setCustomValidity('');
 });
-// on form submit validates user input
-fetchNode('[type="submit"]').addEventListener('click', event => {
-  if(nodes.payment.value == 'credit card'){
-    nodes.ccnum.value ?
-      check(nodes.ccnum, regX.cc, "Enter valid card number") :
-      nodes.ccnum.placeholder = "Required field";
-    nodes.zip.value ?
-      check(nodes.zip, regX.zip, "5 digit zipcode") :
-      nodes.zip.placeholder = "Required field";
-    nodes.cvv.value ?
-      check(nodes.cvv, regX.cvv, "3 digit CVV") :
-      nodes.cvv.placeholder = "Required field";
-  }
-  nodes.email.value ?
-    check(nodes.email, regX.email, "Enter valid email") :
-    nodes.email.placeholder = "Required field";
-  nodes.name.value ?
-    check(nodes.name, regX.name, "Enter full name") :
-    nodes.name.placeholder = "Required field";
-
-    if(nodes.payment.value == 'select_method') {
-      nodes.payment.style.border = '1px solid red';
-      event.preventDefault;
-    } else nodes.payment.style.border = 'none';
-
-    if(!fetchNode('input:checked')){
-      nodes.totalcost.innerHTML = 'Activity selection required';
-      nodes.totalcost.style.color = 'red';
-      event.preventDefault();
-    }
-});
-
-// **FUNCTIONS** //
+//** FUNCTIONS **//
 // validates form input
-function check (node, pattern, msg) {
-    pattern.test(node.value) ?
-      true :
-      notValid(node, msg);
+function check (element) {
+  const {node, check, msg} = element;
+  const RE = new RegExp(check);
+  node.setCustomValidity('');
+  if(RE.test(node.value)) {
+    node.setCustomValidity('');
+  } else {
+    node.setCustomValidity(msg);
+  }
 }
-// handles invalid form entry
-function notValid (node, msg) {
-  node.value = "";
-  node.placeholder = msg;
+// create / delete attributes
+function createAttribute (node, att, value) {
+  node.setAttribute(att, value);
+  return node;
+}
+function deleteAttribute (node, att) {
+  node.removeAttribute(att);
+  return node;
 }
 // calls fn on each item of arr
 function forEach (fn, arr) {
@@ -191,11 +199,13 @@ function fetchNodes (selector) {
 // show / hide node with showNode(..) and hideNode(..)
 function showNode (node) {
   !node.style.display || (node.style.display = '');
+  return node;
 }
 function hideNode (node) {
   node.style.display || (node.style.display = 'none');
+  return node;
 }
-// disable / enable node
+// enable / disable nodes
 function disable (node) {
   node.disabled = true;
 }
